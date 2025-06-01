@@ -1,0 +1,7 @@
+# Python
+venv
+.venv
+.env
+
+# JavaScript/TypeScript
+node_modules

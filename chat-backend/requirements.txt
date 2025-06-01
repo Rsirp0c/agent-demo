@@ -1,0 +1,9 @@
+fastapi==0.109.2
+uvicorn==0.27.1
+openai==1.82.0
+python-dotenv==1.0.1
+pydantic==2.6.1 
+azure-identity>=1.12.0
+azure-mgmt-resource>=23.0.1
+azure-mgmt-resourcegraph>=8.0.0
+azure-mgmt-cognitiveservices>=13.5.0
