@@ -1,0 +1,164 @@
+{
+    "computer-use-preview": {
+        "": {
+            "retirement_date": "2025-03-11",
+            "replacement_model": "None"
+        }
+    },
+    "dall-e-3": {
+        "3": {
+            "retirement_date": "2025-06-30",
+            "replacement_model": "None"
+        }
+    },
+    "gpt-35-turbo-16k": {
+        "0613": {
+            "retirement_date": "2025-04-30",
+            "replacement_model": "gpt-4.1-mini version: 2025-04-14"
+        }
+    },
+    "gpt-35-turbo": {
+        "1106": {
+            "retirement_date": "2025-07-16",
+            "replacement_model": "gpt-4.1-mini version: 2025-04-14"
+        },
+        "0125": {
+            "retirement_date": "2025-07-16",
+            "replacement_model": "gpt-4.1-mini version: 2025-04-14"
+        }
+    },
+    "gpt-4": {
+        "0314": {
+            "retirement_date": "2025-06-06",
+            "replacement_model": "gpt-4o version: 2024-11-20"
+        },
+        "0613": {
+            "retirement_date": "2025-06-06",
+            "replacement_model": "gpt-4o version: 2024-11-20"
+        },
+        "turbo-2024-04-09": {
+            "retirement_date": "2025-06-06",
+            "replacement_model": "gpt-4o version: 2024-11-20"
+        },
+        "1106-preview": {
+            "retirement_date": "2025-05-01",
+            "replacement_model": "gpt-4o version: 2024-11-20"
+        },
+        "0125-preview": {
+            "retirement_date": "2025-05-01",
+            "replacement_model": "gpt-4o version: 2024-11-20"
+        },
+        "vision-preview": {
+            "retirement_date": "2025-05-15",
+            "replacement_model": "gpt-4o version: 2024-11-20"
+        }
+    },
+    "gpt-4.5-preview": {
+        "2025-02-27": {
+            "retirement_date": "2025-07-14",
+            "replacement_model": "gpt-4.1 version: 2025-04-14"
+        }
+    },
+    "gpt-4.1": {
+        "2025-04-14": {
+            "retirement_date": "2026-04-11",
+            "replacement_model": "None"
+        }
+    },
+    "gpt-4.1-mini": {
+        "2025-04-14": {
+            "retirement_date": "2026-04-11",
+            "replacement_model": "None"
+        }
+    },
+    "gpt-4.1-nano": {
+        "2025-04-14": {
+            "retirement_date": "2026-04-11",
+            "replacement_model": "None"
+        }
+    },
+    "gpt-4o": {
+        "2024-05-13": {
+            "retirement_date": "2025-06-30",
+            "replacement_model": "gpt-4.1 version: 2025-04-14"
+        },
+        "2024-08-06": {
+            "retirement_date": "2025-08-06",
+            "replacement_model": "gpt-4.1 version: 2025-04-14"
+        },
+        "2024-11-20": {
+            "retirement_date": "2026-03-01",
+            "replacement_model": "gpt-4.1 version: 2025-04-14"
+        }
+    },
+    "gpt-4o-mini": {
+        "2024-07-18": {
+            "retirement_date": "2025-08-16",
+            "replacement_model": "gpt-4.1-mini version: 2025-04-14"
+        }
+    },
+    "gpt-3.5-turbo-instruct": {
+        "0914": {
+            "retirement_date": "2025-05-31",
+            "replacement_model": "None"
+        }
+    },
+    "gpt-image-1": {
+        "2025-04-15": {
+            "retirement_date": "2025-08-01",
+            "replacement_model": "None"
+        }
+    },
+    "o1-preview": {
+        "2024-09-12": {
+            "retirement_date": "2025-05-29",
+            "replacement_model": "o1"
+        }
+    },
+    "o1": {
+        "2024-12-17": {
+            "retirement_date": "2025-12-17",
+            "replacement_model": "None"
+        }
+    },
+    "o4-mini": {
+        "2025-04-16": {
+            "retirement_date": "2026-04-11",
+            "replacement_model": "None"
+        }
+    },
+    "o3": {
+        "2025-04-16": {
+            "retirement_date": "2026-04-11",
+            "replacement_model": "None"
+        }
+    },
+    "o3-mini": {
+        "2025-01-31": {
+            "retirement_date": "2026-02-01",
+            "replacement_model": "None"
+        }
+    },
+    "text-embedding-ada-002": {
+        "1": {
+            "retirement_date": "2026-04-30",
+            "replacement_model": "text-embedding-3-small or text-embedding-3-large"
+        },
+        "2": {
+            "retirement_date": "2026-04-30",
+            "replacement_model": "text-embedding-3-small or text-embedding-3-large"
+        }
+    },
+    "text-embedding-3-small": {
+        "": {
+            "retirement_date": "2026-04-30",
+            "replacement_model": "None"
+        }
+    },
+    "text-embedding-3-large": {
+        "": {
+            "retirement_date": "2026-04-30",
+            "replacement_model": "None"
+        }
+    }
+}

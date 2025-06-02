@@ -1,13 +1,22 @@
- import { useState } from 'react'
+import { useState } from 'react'
 import './App.css'
+import MarkdownIt from 'markdown-it'
+
 
 interface Message {
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'system'
   content: string
 }
 
+const mdParser = new MarkdownIt()
+
 function App() {
-  const [messages, setMessages] = useState<Message[]>([])
+  // Add a default system message
+  const systemMessage: Message = {
+    role: 'system',
+    content: 'You are a Azure Agent helping users to check their model deployment status and update to desired version. Please respond in Markdown format.'
+  }
+  const [messages, setMessages] = useState<Message[]>([systemMessage])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -61,14 +70,20 @@ function App() {
   return (
     <div className="chat-container">
       <div className="messages-container">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`message ${message.role === 'user' ? 'user-message' : 'ai-message'}`}
-          >
-            {message.content}
-          </div>
+        {messages
+          .filter((message) => message.role !== 'system')
+          .map((message, index) => (
+            <div
+              key={index}
+              className={`message ${message.role === 'user' ? 'user-message' : 'ai-message'}`}
+              dangerouslySetInnerHTML={{ __html: mdParser.render(message.content) }}
+            />
         ))}
+        {isLoading && (
+          <div className="spinner">
+            <span className="sr-only">Loading...</span>
+          </div>
+        )}
         {error && (
           <div className="message error-message">
             Error: {error}

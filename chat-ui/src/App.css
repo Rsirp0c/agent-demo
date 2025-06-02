@@ -43,9 +43,9 @@
 
 .chat-container {
   max-width: 1400px;
-  width:800px;
+  width: 1000px;
   margin: 0 auto;
-  height: 80vh;
+  height: calc(100vh - 70px);
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -61,7 +61,8 @@
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch; /* changed from flex-start */
+  text-align: left;     /* add this line */
 }
 
 .message {
@@ -70,6 +71,7 @@
   border-radius: 12px;
   word-wrap: break-word;
   max-width: 85%;
+  text-align: left;     /* add this line */
 }
 
 .user-message {
@@ -166,4 +168,46 @@
 
 .subscription-button:hover {
   background-color: #0056b3;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table, th, td {
+  border: 1px solid #ccc;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+}
+
+.spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 4px solid #007bff;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  position: relative;
+  vertical-align: middle;
+}
+
+.spinner .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

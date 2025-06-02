@@ -2,9 +2,12 @@
 venv
 .venv
 .env
+__pycache__
 
 # JavaScript/TypeScript
 node_modules
+package-lock.json
 
 #
 .DS_Store
+test
