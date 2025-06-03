@@ -12,6 +12,7 @@ from azure.mgmt.cognitiveservices.models import (
     DeploymentModel,
     Sku
 )
+from schema import ModelInfo, DeploymentUpdateRequest
 
 # Initialize Azure credentials and load model data
 with open("model_info.json", "r") as f:
@@ -31,6 +32,7 @@ async def get_deployed_models() -> List[Dict]:
     Returns:
         List[Dict]: List of deployments with their details
     """
+    
     rg_client = ResourceGraphClient(cred)
     
     # Query Resource Graph for OpenAI accounts
@@ -47,12 +49,6 @@ async def get_deployed_models() -> List[Dict]:
     )
     accounts = rg_client.resources(query).data
 
-    # save accounts to a file
-    with open("accounts.json", "w") as f:
-        import json
-        json.dump([dict(a) for a in accounts], f, indent=4)
-    
-
     if not accounts:
         accounts = [
             {
@@ -63,7 +59,6 @@ async def get_deployed_models() -> List[Dict]:
                 "location": "eastus"
             }
         ]
-
     
     # Get deployments for each account
     deployments = []
@@ -84,27 +79,28 @@ async def get_deployed_models() -> List[Dict]:
     await asyncio.gather(*[_get_deployments(a) for a in accounts])
 
     serializable_deployments = [dict(d) for d in deployments]
-    
-    # save return results to a file
-    with open("deployments.json", "w") as f:
-        import json
-        json.dump(serializable_deployments, f, indent=4)
 
     return serializable_deployments
 
-async def query_model_info(model_names: List[str], versions: List[str]) -> List[Dict]:
+
+async def query_model_info(model_infos: List[ModelInfo]) -> List[Dict]:
     """
     Query the retirement date and replacement model for given model names and versions.
 
     Args:
-        model_names (List[str]): List of model names to query.
-        versions (List[str]): List of version strings (use empty string if not versioned).
+        model_infos (List[ModelInfo]): List of ModelInfo objects containing model names and versions.
+        class ModelInfo(BaseModel):
+            model_name: str
+            model_version: str
 
     Returns:
         List[Dict]: List of dictionaries with retirement_date and replacement_model, or error info for each pair.
     """
     results = []
-    for model_name, version in zip(model_names, versions):
+    for info in model_infos:
+        model_name = info.model_name
+        version = info.model_version
+
         if model_name not in model_data:
             results.append({"model_name": model_name, "version": version, "error": f"Model '{model_name}' not found."})
             continue
@@ -122,7 +118,8 @@ async def query_model_info(model_names: List[str], versions: List[str]) -> List[
             "replacement_model": entry.get("replacement_model", "None")
         })
     return results
-    
+
+
 async def update_deployed_model(
     resource_group: str,
     account_name: str,
@@ -152,7 +149,8 @@ async def update_deployed_model(
             account_name=account_name,
             deployment_name=deployment_name
         )
-    except Exception:
+    except Exception as e:
+        print(f"Error retrieving existing deployment: {e}")
         return None
 
     new_model = DeploymentModel(
@@ -176,13 +174,16 @@ async def update_deployed_model(
         sku_capacity = new_sku_capacity or existing.sku.capacity
         sku = Sku(name=sku_name, capacity=sku_capacity)
     else:
-        sku = existing.sku
+        sku = Sku(
+            name="GlobalStandard",
+            capacity=existing.sku.capacity
+        )
 
     deployment_parameters = Deployment(
         sku=sku,
         properties=new_properties
     )
-
+    
     try:
         poller = client.deployments.begin_create_or_update(
             resource_group_name=resource_group,
@@ -198,39 +199,45 @@ async def update_deployed_model(
         )
         url = f"https://portal.azure.com/#resource{updated_deployment.id}"
         return {"deployment": deployment_dict, "url": url}
-    except Exception:
+    
+    except Exception as e:
+        print(f"Error updating deployment: {e}")
         return None
 
-async def batch_update_deployed_models(
-    resource_group: List[str],
-    account_name: List[str],
-    updates: List[Dict]
-) -> List[Dict]:
+
+async def batch_update_deployed_models(ListUpdateInfo: List[DeploymentUpdateRequest]) -> List[Dict]:
     """
     Batch updates multiple Azure Cognitive Services deployments.
 
     Args:
-        resource_group (List[str]): List of resource groups for each deployment.
-        account_name (List[str]): List of account names for each deployment.
-        updates (List[Dict]): List of update parameters for each deployment.
+        class Update(BaseModel):
+            deployment_name: str
+            new_model_name: str
+            new_model_version: str
+            new_sku_name: Optional[str] = None
+            new_sku_capacity: Optional[int] = None
+
+        class DeploymentUpdateRequest(BaseModel):
+            resource_group: str
+            account_name: str
+            update: Update
 
     Returns:
         List[Dict]: List of results for each update operation.
     """
-    tasks = []
-    for rg, acct, update in zip(resource_group, account_name, updates):
-        task = update_deployed_model(
-            resource_group=rg,
-            account_name=acct,
-            deployment_name=update["deployment_name"],
-            new_model_name=update["new_model_name"],
-            new_model_version=update.get("new_model_version"),
-            new_sku_name=update.get("new_sku_name"),
-            new_sku_capacity=update.get("new_sku_capacity")
+    results = []
+    for update_info in ListUpdateInfo:
+        result = await update_deployed_model(
+            resource_group=update_info.resource_group,
+            account_name=update_info.account_name,
+            deployment_name=update_info.update.deployment_name,
+            new_model_name=update_info.update.new_model_name,
+            new_model_version=update_info.update.new_model_version,
+            new_sku_name=update_info.update.new_sku_name,
+            new_sku_capacity=update_info.update.new_sku_capacity
         )
-        tasks.append(task)
-
-    return await asyncio.gather(*tasks)
+        results.append(result)
+    return results
 
 # Define available tools
 available_tools = [
@@ -256,18 +263,21 @@ available_tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "model_names": {
+                    "model_infos": {
                         "type": "array",
-                        "items": {"type": "string"},
-                        "description": "List of model names to query."
-                    },
-                    "versions": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "List of version strings (use empty string if not versioned)."
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "model_name": {"type": "string"},
+                                "model_version": {"type": "string"}
+                            },
+                            "required": ["model_name", "model_version"],
+                            "additionalProperties": False,
+                        },
+                        "description": "List of model info objects, each with model_name and model_version."
                     }
                 },
-                "required": ["model_names", "versions"],
+                "required": ["model_infos"],
                 "additionalProperties": False,
             },
             "strict": True,
@@ -277,38 +287,43 @@ available_tools = [
         "type": "function",
         "function": {
             "name": "batch_update_deployed_models",
-            "description": "Batch update multiple Azure Cognitive Services deployments. Each update should include deployment_name, new_model_name, and optionally new_model_version, new_sku_name, new_sku_capacity.",
+            "description": "Batch update multiple Azure Cognitive Services deployments. Each update should include resource_group, account_name, and update (with deployment_name, new_model_name, new_model_version, new_sku_name, new_sku_capacity).",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "resource_group": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "List of resource groups for each deployment."
-                    },
-                    "account_name": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "List of account names for each deployment."
-                    },
-                    "updates": {
+                    "ListUpdateInfo": {
                         "type": "array",
                         "items": {
                             "type": "object",
                             "properties": {
-                                "deployment_name": {"type": "string"},
-                                "new_model_name": {"type": "string"},
-                                "new_model_version": {"type": "string"},
-                                "new_sku_name": {"type": "string"},
-                                "new_sku_capacity": {"type": "integer"}
+                                "resource_group": {"type": "string"},
+                                "account_name": {"type": "string"},
+                                "update": {
+                                    "type": "object",
+                                    "properties": {
+                                        "deployment_name": {"type": "string"},
+                                        "new_model_name": {"type": "string"},
+                                        "new_model_version": {"type": "string"},
+                                        "new_sku_name": {"type": "string"},
+                                        "new_sku_capacity": {"type": "integer"}
+                                    },
+                                    "required": [
+                                        "deployment_name",
+                                        "new_model_name",
+                                        "new_model_version",
+                                        "new_sku_name",
+                                        "new_sku_capacity"
+                                    ],
+                                    "additionalProperties": False,
+                                }
                             },
-                            "required": ["deployment_name", "new_model_name", "new_model_version", "new_sku_name", "new_sku_capacity"], 
+                            "required": ["resource_group", "account_name", "update"],
                             "additionalProperties": False,
                         },
-                        "description": "List of update parameters for each deployment."
+                        "description": "List of deployment update requests."
                     }
                 },
-                "required": ["resource_group", "account_name", "updates"],
+                "required": ["ListUpdateInfo"],
                 "additionalProperties": False,
             },
             "strict": True,
@@ -318,13 +333,16 @@ available_tools = [
 
 async def call_function(name: str, args: dict):
     if name == "get_deployed_models":
+        print("\nPython running get_deployed_models")
         return await get_deployed_models()
     elif name == "query_model_info":
-        return await query_model_info(args["model_names"], args["versions"])
+        print("\nPython running query_model_info")
+        # Convert dicts to ModelInfo objects
+        model_infos = [ModelInfo(**info) for info in args["model_infos"]]
+        return await query_model_info(model_infos)
     elif name == "batch_update_deployed_models":
-        return await batch_update_deployed_models(
-            args["resource_group"],
-            args["account_name"],
-            args["updates"]
-        )
+        print("\nPython running batch_update_deployed_models")
+        # Convert dicts to DeploymentUpdateRequest objects
+        ListUpdateInfo = [DeploymentUpdateRequest(**info) for info in args["ListUpdateInfo"]]
+        return await batch_update_deployed_models(ListUpdateInfo)
     raise ValueError(f"Unknown function: {name}")

@@ -14,7 +14,7 @@ function App() {
   // Add a default system message
   const systemMessage: Message = {
     role: 'system',
-    content: 'You are a Azure Agent helping users to check their model deployment status and update to desired version. Please respond in Markdown format.'
+    content: 'You are a Azure Agent helping users to check their model deployment status and update to desired version. When using tools, please try to incorporate all the tools output as those are important information for customers. Please respond in Markdown format.'
   }
   const [messages, setMessages] = useState<Message[]>([systemMessage])
   const [input, setInput] = useState('')
@@ -79,11 +79,15 @@ function App() {
               dangerouslySetInnerHTML={{ __html: mdParser.render(message.content) }}
             />
         ))}
+
         {isLoading && (
-          <div className="spinner">
-            <span className="sr-only">Loading...</span>
+          <div className="message ai-message loading-message">
+            <div className="spinner">
+              <span className="sr-only">Loading...</span>
+            </div>
           </div>
         )}
+
         {error && (
           <div className="message error-message">
             Error: {error}
