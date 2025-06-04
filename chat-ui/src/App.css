@@ -43,7 +43,7 @@
 
 .chat-container {
   max-width: 1400px;
-  width: 1000px;
+  width: 1200px;
   margin: 0 auto;
   height: calc(100vh - 70px);
   display: flex;
@@ -67,7 +67,7 @@
 
 .message {
   padding: 10px 10px;
-  margin-bottom: 12px;
+  margin: 12px;
   border-radius: 12px;
   word-wrap: break-word;
   max-width: 85%;
@@ -210,4 +210,38 @@ th, td {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.suggestions-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  /* background-color: #f5f5f5; */
+}
+
+.suggestion-button {
+  background: #f0f4ff;
+  color: #007bff;
+  border: 1px solid #007bff;
+  border-radius: 20px;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.suggestion-button:hover:not(:disabled) {
+  background: #007bff;
+  color: #fff;
+}
+
+.suggestion-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.suggestion-button:focus {
+  outline: none;
+  box-shadow: none;
 }

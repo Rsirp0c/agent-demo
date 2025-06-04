@@ -14,12 +14,25 @@ function App() {
   // Add a default system message
   const systemMessage: Message = {
     role: 'system',
-    content: 'You are a Azure Agent helping users to check their model deployment status and update to desired version. When using tools, please try to incorporate all the tools output as those are important information for customers. Please respond in Markdown format.'
+    content: [
+      'You are a Azure Agent helping users to check their model deployment status and update to desired version.',
+      "User journey is to find all deployed models as first step, then find out the retiring date and recommneded replacemrent model, at last, update the model to the latest version.",
+      "If user is at any of the above steps, please guide user to the next step.",
+      'When using tools, please try to incorporate all the tools output as those are important information for customers.',
+      'Please respond in Markdown format.'
+    ].join(' ')
   }
   const [messages, setMessages] = useState<Message[]>([systemMessage])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Suggestion prompts
+  const suggestions = [
+    "Show all deployed models",
+    "What is the retiring date for my models and the recommended replacement?",
+    "Update my model to the recommended version"
+  ]
 
   const handleSend = async () => {
     if (!input.trim()) return
@@ -93,6 +106,20 @@ function App() {
             Error: {error}
           </div>
         )}
+      </div>
+      {/* Suggestion prompts moved here */}
+      <div className="suggestions-container">
+        {suggestions.map((s, idx) => (
+          <button
+            key={idx}
+            className="suggestion-button"
+            onClick={() => setInput(s)}
+            disabled={isLoading}
+            type="button"
+          >
+            {s}
+          </button>
+        ))}
       </div>
       <div className="input-container">
         <input
