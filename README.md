@@ -14,11 +14,12 @@ This repository contains a FastAPI backend and a React user interface that toget
 ## Prerequisites
 - Python 3
 - Node.js
-- Azure credentials placed in a `.env` file with variables:
+- Azure credentials placed in a `.env` file with variables in backend folder:
   - `AZURE_OPENAI_API_KEY`
   - `AZURE_OPENAI_ENDPOINT`
   - `AZURE_OPENAI_MODEL_NAME`
   - `AZURE_SUBSCRIPTION_ID`
+  - `AZURE_OPENAI_API_VERSION`
 
 ## Setup
 
