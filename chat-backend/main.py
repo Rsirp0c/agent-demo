@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sse_starlette.sse import EventSourceResponse
 
 from openai import AzureOpenAI
 from schema import ChatRequest, ChatResponse, Message
@@ -90,6 +91,63 @@ async def chat(chat_request: ChatRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/chat/stream")
+async def chat_stream(chat_request: ChatRequest):
+    async def event_generator():
+        try:
+            print(f"\nUser asks: {chat_request.messages[-1].content}")
+            messages = [
+                {"role": msg.role, "content": msg.content}
+                for msg in chat_request.messages
+            ]
+
+            response = client.chat.completions.create(
+                model=os.getenv("AZURE_OPENAI_MODEL_NAME"),
+                messages=messages,
+                tools=available_tools,
+                tool_choice="auto",
+            )
+            assistant_message = response.choices[0].message
+
+            while assistant_message.tool_calls:
+                print(f"\nLLM called tools: {assistant_message.tool_calls}")
+                messages.append({"role": "assistant", "tool_calls": assistant_message.tool_calls})
+
+                for tool_call in assistant_message.tool_calls:
+                    name = tool_call.function.name
+                    args = json.loads(tool_call.function.arguments)
+
+                    result = await call_function(name, args)
+                    print(f"\nTool {name}, result is: {result}")
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(result),
+                    })
+                    yield {"event": "tool_update", "data": json.dumps(result)}
+
+                response = client.chat.completions.create(
+                    model=os.getenv("AZURE_OPENAI_MODEL_NAME"),
+                    messages=messages,
+                    tools=available_tools,
+                    tool_choice="auto",
+                )
+                assistant_message = response.choices[0].message
+
+            print(f"\nMessages: {messages}")
+            print(f"\nLLM final response: {assistant_message.content}")
+
+            final_payload = json.dumps({
+                "role": assistant_message.role,
+                "content": assistant_message.content or "",
+            })
+            yield {"event": "final", "data": final_payload}
+        except Exception as e:
+            yield {"event": "error", "data": str(e)}
+
+    return EventSourceResponse(event_generator())
 
 
 if __name__ == "__main__":
