@@ -245,3 +245,14 @@ th, td {
   outline: none;
   box-shadow: none;
 }
+
+.tool-update {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 6px auto;
+  max-width: 90%;
+  text-align: center;
+}

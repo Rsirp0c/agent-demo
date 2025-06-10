@@ -4,7 +4,12 @@ import MarkdownIt from 'markdown-it'
 
 
 interface Message {
-  role: 'user' | 'assistant' | 'system'
+  role: 'user' | 'assistant' | 'system' | 'tool'
+  content: string
+}
+
+interface ToolMessage {
+  id: number
   content: string
 }
 
@@ -26,6 +31,7 @@ function App() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [toolMessages, setToolMessages] = useState<ToolMessage[]>([])
 
   // Suggestion prompts
   const suggestions = [
@@ -48,30 +54,72 @@ function App() {
     setError(null)
 
     try {
-      // Call the backend API
-      const response = await fetch('http://localhost:8000/api/chat', {
+      const response = await fetch('http://localhost:8000/api/chat/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'text/event-stream',
         },
         body: JSON.stringify({
           messages: [...messages, userMessage],
         }),
       })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.detail || 'Failed to get response from AI')
+      if (!response.ok || !response.body) {
+        const errorData = await response.text().catch(() => '')
+        throw new Error(errorData || 'Failed to get response from AI')
       }
 
-      const data = await response.json()
-      
-      // Add AI response
-      const aiMessage: Message = {
-        role: 'assistant',
-        content: data.message.content,
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder('utf-8')
+      let buffer = ''
+
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        let index
+        while ((index = buffer.indexOf('\n\n')) !== -1) {
+          const raw = buffer.slice(0, index)
+          buffer = buffer.slice(index + 2)
+          if (!raw.trim()) continue
+
+          const lines = raw.split('\n')
+          let event = ''
+          let data = ''
+          for (const line of lines) {
+            if (line.startsWith('event:')) {
+              event = line.slice(6).trim()
+            } else if (line.startsWith('data:')) {
+              data += line.slice(5).trim()
+            }
+          }
+
+          if (event === 'tool_update') {
+            const id = Date.now() + Math.random()
+            const content = data
+            setToolMessages((prev) => [...prev, { id, content }])
+            setMessages((prev) => [
+              ...prev,
+              { role: 'tool', content },
+            ])
+            setTimeout(() => {
+              setToolMessages((curr) => curr.filter((m) => m.id !== id))
+            }, 5000)
+          } else if (event === 'final') {
+            const parsed = JSON.parse(data)
+            setMessages((prev) => [
+              ...prev,
+              {
+                role: parsed.role,
+                content: parsed.content,
+              } as Message,
+            ])
+          } else if (event === 'error') {
+            setError(data)
+          }
+        }
       }
-      setMessages((prev) => [...prev, aiMessage])
     } catch (error) {
       console.error('Failed to get response from AI', error)
       setError(error instanceof Error ? error.message : 'An unexpected error occurred')
@@ -84,13 +132,19 @@ function App() {
     <div className="chat-container">
       <div className="messages-container">
         {messages
-          .filter((message) => message.role !== 'system')
+          .filter((message) => message.role !== 'system' && message.role !== 'tool')
           .map((message, index) => (
             <div
               key={index}
               className={`message ${message.role === 'user' ? 'user-message' : 'ai-message'}`}
               dangerouslySetInnerHTML={{ __html: mdParser.render(message.content) }}
             />
+        ))}
+
+        {toolMessages.map((m) => (
+          <div key={m.id} className="tool-update">
+            {m.content}
+          </div>
         ))}
 
         {isLoading && (
