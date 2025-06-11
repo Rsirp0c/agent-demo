@@ -78,6 +78,7 @@ function App() {
         const { value, done } = await reader.read()
         if (done) break
         buffer += decoder.decode(value, { stream: true })
+         buffer = buffer.replace(/\r/g, '')
         let index
         while ((index = buffer.indexOf('\n\n')) !== -1) {
           const raw = buffer.slice(0, index)
@@ -95,18 +96,20 @@ function App() {
             }
           }
 
-          if (event === 'tool_update') {
+          if (event === 'tool_call') {
+            const content = data
+            const id = Date.now() + Math.random()
+            setToolMessages((prev) => [...prev, { id, content }])
+            
+          } else if (event === 'tool_update') {
             const id = Date.now() + Math.random()
             const content = data
             setToolMessages((prev) => [...prev, { id, content }])
-            setMessages((prev) => [
-              ...prev,
-              { role: 'tool', content },
-            ])
-            setTimeout(() => {
-              setToolMessages((curr) => curr.filter((m) => m.id !== id))
-            }, 5000)
+
           } else if (event === 'final') {
+            console.log('FINAL EVENT', data)
+            // clear tool messages when final event is received
+            setToolMessages([])
             const parsed = JSON.parse(data)
             setMessages((prev) => [
               ...prev,
@@ -115,6 +118,7 @@ function App() {
                 content: parsed.content,
               } as Message,
             ])
+
           } else if (event === 'error') {
             setError(data)
           }

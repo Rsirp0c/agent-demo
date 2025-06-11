@@ -119,8 +119,12 @@ async def chat_stream(chat_request: ChatRequest):
                     name = tool_call.function.name
                     args = json.loads(tool_call.function.arguments)
 
+                    yield {"event": "tool_call", "data": name}
+
                     result = await call_function(name, args)
+
                     print(f"\nTool {name}, result is: {result}")
+                    
                     messages.append({
                         "role": "tool",
                         "tool_call_id": tool_call.id,
