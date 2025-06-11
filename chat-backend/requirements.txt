@@ -8,3 +8,4 @@ azure-mgmt-resource>=23.0.1
 azure-mgmt-resourcegraph>=8.0.0
 azure-mgmt-cognitiveservices>=13.5.0
 itsdangerous
+sse-starlette==2.3.6

@@ -1,8 +1,10 @@
 from typing import Dict, List, Optional
+from datetime import datetime, timedelta
 import json, os
 import asyncio
 
 from azure.identity import DefaultAzureCredential
+from azure.core.credentials import AccessToken, TokenCredential
 from azure.mgmt.resourcegraph import ResourceGraphClient
 from azure.mgmt.resourcegraph.models import QueryRequest
 from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
@@ -14,12 +16,27 @@ from azure.mgmt.cognitiveservices.models import (
 )
 from schema import ModelInfo, DeploymentUpdateRequest
 
+
 # Initialize Azure credentials and load model data
 with open("model_info.json", "r") as f:
     model_data = json.load(f)
 
-cred = DefaultAzureCredential()
+# Use DefaultAzureCredential for local development and production
+# cred = DefaultAzureCredential()
 
+# For testing purposes, we will use a static token credential
+class StaticTokenCredential(TokenCredential):
+    """Wrap an already-acquired ARM token so SDK clients will accept it."""
+    def __init__(self, token: str, expires_in_sec: int = 3600):
+        self._access_token = AccessToken(
+            token=token,
+            expires_on=int((datetime.utcnow() + timedelta(seconds=expires_in_sec)).timestamp())
+        )
+
+    def get_token(self, *scopes, **kwargs):
+        return self._access_token
+
+cred = StaticTokenCredential(os.getenv("AZURE_ACCESS_TOKEN"))
 
 # Function for tool use
 async def get_deployed_models() -> List[Dict]:
