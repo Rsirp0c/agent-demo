@@ -7,8 +7,7 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: List[Message]
-    tools: Optional[List[dict]] = None
-
+    
 class ChatResponse(BaseModel):
     message: Message
 
