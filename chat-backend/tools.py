@@ -27,7 +27,7 @@ with open("model_info.json", "r") as f:
 # For testing purposes, we will use a static token credential
 class StaticTokenCredential(TokenCredential):
     """Wrap an already-acquired ARM token so SDK clients will accept it."""
-    def __init__(self, token: str, expires_in_sec: int = 3600):
+    def __init__(self, token: str, expires_in_sec: int = 360000):
         self._access_token = AccessToken(
             token=token,
             expires_on=int((datetime.utcnow() + timedelta(seconds=expires_in_sec)).timestamp())
