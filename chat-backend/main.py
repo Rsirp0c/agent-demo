@@ -140,7 +140,7 @@ async def chat_stream(chat_request: ChatRequest):
                 )
                 assistant_message = response.choices[0].message
 
-            print(f"\nMessages: {messages}")
+            # print(f"\nMessages: {messages}")
             print(f"\nLLM final response: {assistant_message.content}")
 
             final_payload = json.dumps({
