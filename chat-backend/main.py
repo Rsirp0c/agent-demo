@@ -130,7 +130,7 @@ async def chat_stream(chat_request: ChatRequest):
                         "tool_call_id": tool_call.id,
                         "content": json.dumps(result),
                     })
-                    yield {"event": "tool_update", "data": json.dumps(result)}
+                    # yield {"event": "tool_update", "data": json.dumps(result)}
 
                 response = client.chat.completions.create(
                     model=os.getenv("AZURE_OPENAI_MODEL_NAME"),
