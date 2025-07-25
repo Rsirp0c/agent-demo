@@ -26,7 +26,7 @@ def load_model_data(file_path: str = "model_info.json") -> dict:
 
 def get_azure_credential():
     """Get Azure credential for authentication based on environment."""
-    # env = os.getenv("PROD_OR_TEST", "test").lower()
+    env = os.getenv("PROD_OR_TEST", "test").lower()
     if env == "prod":
         class StaticTokenCredential(TokenCredential):
             """Wrap an already-acquired ARM token so SDK clients will accept it."""
