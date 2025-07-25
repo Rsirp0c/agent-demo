@@ -27,22 +27,22 @@ def load_model_data(file_path: str = "model_info.json") -> dict:
 def get_azure_credential():
     """Get Azure credential for authentication based on environment."""
     # env = os.getenv("PROD_OR_TEST", "test").lower()
-    # if env == "prod":
-    #     class StaticTokenCredential(TokenCredential):
-    #         """Wrap an already-acquired ARM token so SDK clients will accept it."""
-    #         def __init__(self, token: str, expires_in_sec: int = 360000):
-    #             self._access_token = AccessToken(
-    #                 token=token,
-    #                 expires_on=int((datetime.utcnow() + timedelta(seconds=expires_in_sec)).timestamp())
-    #             )
+    if env == "prod":
+        class StaticTokenCredential(TokenCredential):
+            """Wrap an already-acquired ARM token so SDK clients will accept it."""
+            def __init__(self, token: str, expires_in_sec: int = 360000):
+                self._access_token = AccessToken(
+                    token=token,
+                    expires_on=int((datetime.utcnow() + timedelta(seconds=expires_in_sec)).timestamp())
+                )
 
-    #         def get_token(self, *scopes, **kwargs):
-    #             return self._access_token
+            def get_token(self, *scopes, **kwargs):
+                return self._access_token
 
-    #     return StaticTokenCredential(os.getenv("AZURE_ACCESS_TOKEN"))
-    # else:
-    #     return DefaultAzureCredential()
-    return DefaultAzureCredential()
+        return StaticTokenCredential(os.getenv("AZURE_ACCESS_TOKEN"))
+    else:
+        return DefaultAzureCredential()
+    # return DefaultAzureCredential()
 
 
 async def fetch_cognitive_service_accounts(credential, subscription_id: str) -> List[Dict]:
@@ -63,6 +63,7 @@ async def fetch_cognitive_service_accounts(credential, subscription_id: str) -> 
         Resources
         | where type == 'microsoft.cognitiveservices/accounts'
         | where kind =~ 'AIServices'
+        | where resourceGroup == 'harry-foundry-agent-test-group'
         | project id, name, subscriptionId, resourceGroup, location
         """,
         subscriptions=[subscription_id],
